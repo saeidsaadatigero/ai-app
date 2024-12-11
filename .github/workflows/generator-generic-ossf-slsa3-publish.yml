@@ -1,0 +1,54 @@
+name: SLSA Provenance Generator and Deployment
+
+on:
+  workflow_dispatch: # فعال‌سازی دستی
+  release:
+    types: [created] # فعال‌سازی با ایجاد نسخه جدید
+
+jobs:
+  # Job برای ساخت و تولید artifacts
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      digests: ${{ steps.hash.outputs.digests }}
+      
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # مرحله ساخت پروژه
+      - name: Build the project
+        run: |
+          # اینجا دستوراتی برای ساخت پروژه خود اضافه کنید.
+          # مثلا نصب dependencies و انجام تنظیمات مورد نیاز
+          echo "Building the project..."
+
+      # تولید فایل‌ها (artifacts) مانند گزارش‌ها یا خروجی‌های پردازش شده
+      - name: Create Artifacts
+        run: |
+          # اینجا فایل‌های تولیدی مانند گزارش‌ها یا داده‌های پردازش شده را می‌سازید.
+          echo "Processing PDF files..." > artifact.txt
+          echo "Answer generated based on the question" > answer.txt
+
+      # ایجاد subject برای Provenance
+      - name: Generate subject for provenance
+        id: hash
+        run: |
+          set -euo pipefail
+          # لیست کردن فایل‌ها که باید برای پرووننس ارجاع داده شوند
+          files=$(ls artifact*)
+          # تولید شِی‌هش‌ها (hashes) و رمزگذاری base64
+          echo "hashes=$(sha256sum $files | base64 -w0)" >> "${GITHUB_OUTPUT}"
+
+  # Job برای ایجاد Provenance
+  provenance:
+    needs: [build]  # نیاز به job قبلی برای دسترسی به فایل‌ها
+    permissions:
+      actions: read   # برای خواندن مسیر ورک‌فلو
+      id-token: write # برای امضای پرووننس
+      contents: write # برای اضافه کردن assets به یک release جدید
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.4.0
+    with:
+      base64-subjects: "${{ needs.build.outputs.digests }}"
+      upload-assets: true # آپلود دارایی‌ها به نسخه منتشر شده
+
