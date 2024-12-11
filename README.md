@@ -26,7 +26,7 @@ This project allows you to upload a PDF and ask a question about its content. Th
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/yourusername/ai-question-answering-pdf.git
+   git clone https://github.com/saeidsaadatigero/ai-question-answering-pdf.git
    ```
 
 2. Install dependencies:
